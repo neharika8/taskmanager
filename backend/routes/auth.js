@@ -3,10 +3,27 @@ const User = require("../models/User");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 
+// ================= TEST ROUTES (optional but helpful) =================
+
+// This prevents "Cannot GET /api/auth/login" confusion
+router.get("/login", (req, res) => {
+  res.send("Login API is working. Please use POST method.");
+});
+
+router.get("/signup", (req, res) => {
+  res.send("Signup API is working. Please use POST method.");
+});
+
+
 // ================= SIGNUP =================
 router.post("/signup", async (req, res) => {
   try {
     const { name, email, password } = req.body;
+
+    // Validate input
+    if (!name || !email || !password) {
+      return res.status(400).json({ message: "All fields are required" });
+    }
 
     // check if user already exists
     const existingUser = await User.findOne({ email });
@@ -39,6 +56,11 @@ router.post("/login", async (req, res) => {
   try {
     const { email, password } = req.body;
 
+    // Validate input
+    if (!email || !password) {
+      return res.status(400).json({ message: "All fields are required" });
+    }
+
     // check user
     const user = await User.findOne({ email });
     if (!user) {
@@ -54,10 +76,10 @@ router.post("/login", async (req, res) => {
     // create token
     const token = jwt.sign(
       { id: user._id },
-      process.env.JWT_SECRET
+      process.env.JWT_SECRET,
+      { expiresIn: "1d" } // added expiry
     );
 
-    // ✅ IMPORTANT: return name also
     res.json({
       token,
       name: user.name
