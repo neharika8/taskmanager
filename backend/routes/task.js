@@ -1,47 +1,43 @@
-const router = require("express").Router();
+const express = require("express");
+const router = express.Router();
 const Task = require("../models/Task");
-const jwt = require("jsonwebtoken");
 
-// Middleware
-function auth(req, res, next) {
-  const token = req.headers["authorization"];
-  if (!token) return res.status(401).send("No token");
-
-  try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    req.user = decoded;
-    next();
-  } catch {
-    res.status(400).send("Invalid token");
-  }
-}
+// Get tasks
+router.get("/", async (req, res) => {
+  const tasks = await Task.find({ user: req.user });
+  res.json(tasks);
+});
 
 // Add task
-router.post("/", auth, async (req, res) => {
+router.post("/", async (req, res) => {
   const task = new Task({
-    userId: req.user.id,
-    text: req.body.text
+    text: req.body.text,
+    dueDate: req.body.dueDate,
+    user: req.user
   });
   await task.save();
   res.json(task);
 });
 
-// Get tasks
-router.get("/", auth, async (req, res) => {
-  const tasks = await Task.find({ userId: req.user.id });
-  res.json(tasks);
-});
-
-// Delete task
-router.delete("/:id", auth, async (req, res) => {
+// Delete
+router.delete("/:id", async (req, res) => {
   await Task.findByIdAndDelete(req.params.id);
-  res.send("Deleted");
+  res.json({ message: "Deleted" });
 });
 
 // Toggle complete
-router.put("/:id", auth, async (req, res) => {
+router.put("/:id", async (req, res) => {
   const task = await Task.findById(req.params.id);
   task.completed = !task.completed;
+  await task.save();
+  res.json(task);
+});
+
+// Edit
+router.put("/edit/:id", async (req, res) => {
+  const task = await Task.findById(req.params.id);
+  task.text = req.body.text;
+  task.dueDate = req.body.dueDate;
   await task.save();
   res.json(task);
 });
