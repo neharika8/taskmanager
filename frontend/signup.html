@@ -30,18 +30,22 @@
 
 <script>
 async function signup(){
-  if(name.value.trim() === "" || email.value.trim() === "" || password.value.trim() === ""){
+  const nameInput = document.getElementById("name");
+  const emailInput = document.getElementById("email");
+  const passwordInput = document.getElementById("password");
+
+  if(nameInput.value.trim() === "" || emailInput.value.trim() === "" || passwordInput.value.trim() === ""){
     return alert("Please fill all fields");
   }
 
   try {
-    const res = await fetch("http://localhost:5000/api/auth/signup",{
+    const res = await fetch("https://taskmanager-thdl.onrender.com/api/auth/signup",{
       method:"POST",
       headers:{"Content-Type":"application/json"},
       body:JSON.stringify({
-        name: name.value,
-        email: email.value,
-        password: password.value
+        name: nameInput.value,
+        email: emailInput.value,
+        password: passwordInput.value
       })
     });
 
@@ -49,13 +53,19 @@ async function signup(){
 
     if(data.message){
       alert("Signup successful!");
+      
+      // clear fields
+      nameInput.value = "";
+      emailInput.value = "";
+      passwordInput.value = "";
+
       window.location = "login.html";
     } else {
       alert("Signup failed");
     }
 
   } catch (err) {
-    alert("Server error");
+    alert("Server error. Please try again.");
   }
 }
 </script>
